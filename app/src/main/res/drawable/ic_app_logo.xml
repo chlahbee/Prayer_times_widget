@@ -1,0 +1,38 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Background -->
+    <path
+        android:fillColor="#FDFBF7"
+        android:pathData="M0,0h108v108h-108z"/>
+    <!-- Mosque Dome & Minaret in Green -->
+    <path
+        android:fillColor="#0E2F26"
+        android:pathData="M24,76v-8c0,-12 10,-22 22,-22s22,10 22,22v8h-44z"/>
+    <!-- Dome top / Crescent -->
+    <path
+        android:fillColor="#0E2F26"
+        android:pathData="M46,36c-1.5,0 -3,-1.2 -3,-3s1.2,-3 3,-3s3,1.2 3,3s-1.2,3 -3,3z"/>
+    <!-- Minaret -->
+    <path
+        android:fillColor="#0E2F26"
+        android:pathData="M78,76V48c0,-2 1.5,-3.5 3.5,-3.5h3c2,0 3.5,1.5 3.5,3.5v28h-10z"/>
+    <!-- Minaret dome -->
+    <path
+        android:fillColor="#0E2F26"
+        android:pathData="M81.5,40c-2.5,0 -4.5,2 -4.5,4.5h9c0,-2.5 -2,-4.5 -4.5,-4.5z"/>
+    <!-- Clock circle -->
+    <path
+        android:fillColor="#0E2F26"
+        android:pathData="M46,62c-8.3,0 -15,6.7 -15,15s6.7,15 15,15s15,-6.7 15,-15s-6.7,-15 -15,-15z"/>
+    <!-- Clock inner white circle -->
+    <path
+        android:fillColor="#FDFBF7"
+        android:pathData="M46,65c-6.6,0 -12,5.4 -12,12s5.4,12 12,12s12,-5.4 12,-12s-5.4,-12 -12,-12z"/>
+    <!-- Clock hands in Green -->
+    <path
+        android:fillColor="#0E2F26"
+        android:pathData="M46,71v6h4"/>
+</vector>

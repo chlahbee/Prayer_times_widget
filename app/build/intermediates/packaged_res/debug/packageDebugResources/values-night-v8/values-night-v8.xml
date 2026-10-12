@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="config_accent">#047857</color>
+    <color name="config_accent_button_text">#FFFFFF</color>
+    <color name="config_background">#111827</color>
+    <color name="config_card_background">#1F2937</color>
+    <color name="config_header">#0B211B</color>
+    <color name="config_header_accent">#6EE7A8</color>
+    <color name="config_header_text">#FFFFFF</color>
+    <color name="config_row_accent">#6EE7A8</color>
+    <color name="config_row_alternate">#08FFFFFF</color>
+    <color name="config_row_highlight">#0B211B</color>
+    <color name="config_row_text">#FFFFFF</color>
+    <color name="config_secondary_button_background">#374151</color>
+    <color name="config_secondary_button_text">#6EE7B7</color>
+    <color name="config_text_primary">#F9FAFB</color>
+    <color name="config_text_secondary">#9CA3AF</color>
+    <color name="config_toggle_background">#374151</color>
+    <color name="config_toggle_text">#F9FAFB</color>
+    <color name="widget_accent">#34D399</color>
+    <color name="widget_background">#1F2937</color>
+    <color name="widget_button_bg">#374151</color>
+    <color name="widget_button_text">#E5E7EB</color>
+    <color name="widget_card_bg">#111827</color>
+    <color name="widget_text_primary">#F9FAFB</color>
+    <color name="widget_text_secondary">#9CA3AF</color>
+</resources>

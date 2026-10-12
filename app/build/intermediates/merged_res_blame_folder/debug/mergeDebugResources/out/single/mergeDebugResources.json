@@ -1,0 +1,42 @@
+[
+    {
+        "merged": "/home/user/.gradle/daemon/9.0.0/com.khemisset.prayerwidget.app-debug-40:/layout_activity_config.xml.flat",
+        "source": "/home/user/.gradle/daemon/9.0.0/com.khemisset.prayerwidget.app-main-42:/layout/activity_config.xml"
+    },
+    {
+        "merged": "/home/user/.gradle/daemon/9.0.0/com.khemisset.prayerwidget.app-debug-40:/xml_widget_info.xml.flat",
+        "source": "/home/user/.gradle/daemon/9.0.0/com.khemisset.prayerwidget.app-main-42:/xml/widget_info.xml"
+    },
+    {
+        "merged": "/home/user/.gradle/daemon/9.0.0/com.khemisset.prayerwidget.app-debug-40:/drawable_bg_prayers_card.xml.flat",
+        "source": "/home/user/.gradle/daemon/9.0.0/com.khemisset.prayerwidget.app-main-42:/drawable/bg_prayers_card.xml"
+    },
+    {
+        "merged": "/home/user/.gradle/daemon/9.0.0/com.khemisset.prayerwidget.app-debug-40:/drawable_bg_button_minimal.xml.flat",
+        "source": "/home/user/.gradle/daemon/9.0.0/com.khemisset.prayerwidget.app-main-42:/drawable/bg_button_minimal.xml"
+    },
+    {
+        "merged": "/home/user/.gradle/daemon/9.0.0/com.khemisset.prayerwidget.app-debug-40:/layout_item_day_prayer.xml.flat",
+        "source": "/home/user/.gradle/daemon/9.0.0/com.khemisset.prayerwidget.app-main-42:/layout/item_day_prayer.xml"
+    },
+    {
+        "merged": "/home/user/.gradle/daemon/9.0.0/com.khemisset.prayerwidget.app-debug-40:/drawable_bg_widget.xml.flat",
+        "source": "/home/user/.gradle/daemon/9.0.0/com.khemisset.prayerwidget.app-main-42:/drawable/bg_widget.xml"
+    },
+    {
+        "merged": "/home/user/.gradle/daemon/9.0.0/com.khemisset.prayerwidget.app-debug-40:/layout_widget_prayer.xml.flat",
+        "source": "/home/user/.gradle/daemon/9.0.0/com.khemisset.prayerwidget.app-main-42:/layout/widget_prayer.xml"
+    },
+    {
+        "merged": "/home/user/.gradle/daemon/9.0.0/com.khemisset.prayerwidget.app-debug-40:/drawable_ic_app_logo.xml.flat",
+        "source": "/home/user/.gradle/daemon/9.0.0/com.khemisset.prayerwidget.app-main-42:/drawable/ic_app_logo.xml"
+    },
+    {
+        "merged": "com.khemisset.prayerwidget.app-debug-40:/layout_activity_config.xml.flat",
+        "source": "com.khemisset.prayerwidget.app-main-42:/layout/activity_config.xml"
+    },
+    {
+        "merged": "com.khemisset.prayerwidget.app-debug-40:/layout_widget_prayer.xml.flat",
+        "source": "com.khemisset.prayerwidget.app-main-42:/layout/widget_prayer.xml"
+    }
+]
