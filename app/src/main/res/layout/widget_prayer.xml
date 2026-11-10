@@ -8,11 +8,16 @@
     android:padding="8dp">
 
     <!-- Header: Next Prayer & Countdown -->
-    <LinearLayout
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
         android:gravity="center_vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
         <!-- Left: Label, Name, Location -->
         <LinearLayout
@@ -78,12 +83,12 @@
                 android:textColor="@color/widget_text_secondary"/>
         </LinearLayout>
 
-        <!-- Minimalist Toggle Button -->
+        <!-- Refresh Button -->
         <TextView
             android:id="@+id/btn_expand"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="▲"
+            android:text="↻"
             android:textSize="11sp"
             android:textStyle="bold"
             android:includeFontPadding="false"
@@ -91,7 +96,35 @@
             android:background="@drawable/bg_button_minimal"
             android:paddingHorizontal="8dp"
             android:paddingVertical="5dp"/>
-    </LinearLayout>
+        </LinearLayout>
+
+        <!-- Date centered across the complete widget width -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/tv_hijri_date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="15 جمادى الأولى 1448"
+                android:textSize="10sp"
+                android:includeFontPadding="false"
+                android:textColor="@color/widget_text_primary"/>
+
+            <TextView
+                android:id="@+id/tv_gregorian_date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="04/11/2026"
+                android:textSize="9sp"
+                android:includeFontPadding="false"
+                android:textColor="@color/widget_text_secondary"/>
+        </LinearLayout>
+    </FrameLayout>
 
     <!-- HORIZONTAL Layout for Wide Widgets (e.g. 5x1, 4x1) -->
     <LinearLayout

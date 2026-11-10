@@ -24,24 +24,15 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
 import kotlinx.coroutines.*
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import org.json.JSONObject
-import java.io.IOException
 import java.util.*
-import java.time.ZoneId
-import java.util.concurrent.TimeUnit
 
 class ConfigActivity : AppCompatActivity() {
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
     private var lat = DEFAULT_LATITUDE.toDouble()
     private var lon = DEFAULT_LONGITUDE.toDouble()
-    private val client = OkHttpClient.Builder()
-        .connectTimeout(10, TimeUnit.SECONDS)
-        .readTimeout(10, TimeUnit.SECONDS)
-        .build()
-
     override fun onCreate(savedInstanceState: Bundle?) {
         val prefs = getSharedPreferences("prayer_prefs", Context.MODE_PRIVATE)
         val isDarkMode = prefs.getBoolean("dark_mode", false)
@@ -141,8 +132,17 @@ class ConfigActivity : AppCompatActivity() {
     }
 
     private fun fetchLocation() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 100)
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ),
+                100
+            )
             return
         }
         val tv = findViewById<TextView>(R.id.tv_coords)
@@ -150,22 +150,44 @@ class ConfigActivity : AppCompatActivity() {
         val etLon = findViewById<EditText>(R.id.et_lon)
 
         val fused = LocationServices.getFusedLocationProviderClient(this)
-        fused.lastLocation.addOnSuccessListener { loc: Location? ->
-            if (loc != null) {
-                lat = loc.latitude
-                lon = loc.longitude
-                etLat.setText(lat.toString())
-                etLon.setText(lon.toString())
-                val city = resolveCityName(this, lat, lon)
-                tv.text = "المدينة: $city (%.4f, %.4f)".format(lat, lon)
-                Toast.makeText(this, "تم تحديد المدينة: $city", Toast.LENGTH_SHORT).show()
-                fetchMonthlyCalendar(lat, lon)
-            } else {
-                Toast.makeText(this, "فعل GPS و حاول مرة أخرى", Toast.LENGTH_SHORT).show()
+        val tokenSource = CancellationTokenSource()
+        fused.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, tokenSource.token)
+            .addOnSuccessListener { location ->
+                if (location != null) {
+                    applyLocation(location, tv, etLat, etLon)
+                } else {
+                    fused.lastLocation
+                        .addOnSuccessListener { lastLocation ->
+                            if (lastLocation != null) {
+                                applyLocation(lastLocation, tv, etLat, etLon)
+                            } else {
+                                Toast.makeText(this, "تعذر تحديد الموقع، تأكد من تشغيل GPS", Toast.LENGTH_LONG).show()
+                            }
+                        }
+                        .addOnFailureListener {
+                            Toast.makeText(this, "تعذر تحديد الموقع، حاول مرة أخرى", Toast.LENGTH_LONG).show()
+                        }
+                }
             }
-        }.addOnFailureListener {
-            Toast.makeText(this, "فشل تحديد الموقع عبر GPS", Toast.LENGTH_SHORT).show()
-        }
+            .addOnFailureListener {
+                Toast.makeText(this, "فشل تحديد الموقع عبر GPS، تأكد من تشغيل GPS", Toast.LENGTH_LONG).show()
+            }
+    }
+
+    private fun applyLocation(
+        location: Location,
+        tv: TextView,
+        etLat: EditText,
+        etLon: EditText
+    ) {
+        lat = location.latitude
+        lon = location.longitude
+        etLat.setText(lat.toString())
+        etLon.setText(lon.toString())
+        val city = resolveCityName(this, lat, lon)
+        tv.text = "المدينة: $city (%.4f, %.4f)".format(Locale.ROOT, lat, lon)
+        Toast.makeText(this, "تم تحديد المدينة: $city", Toast.LENGTH_SHORT).show()
+        fetchMonthlyCalendar(lat, lon)
     }
 
     private fun fetchMonthlyCalendar(lat: Double, lon: Double) {
@@ -180,31 +202,13 @@ class ConfigActivity : AppCompatActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val method = PrayerCalculation.methodForCoordinates(this@ConfigActivity, lat, lon)
-                val timestamp = System.currentTimeMillis() / 1000
-                val timezoneUrl = "https://api.aladhan.com/v1/timings/$timestamp?latitude=$lat&longitude=$lon&method=$method"
-                val timezoneResponse = client.newCall(Request.Builder().url(timezoneUrl).build()).execute()
-                if (!timezoneResponse.isSuccessful) {
-                    throw IOException("Timezone lookup failed with HTTP ${timezoneResponse.code}")
-                }
-                val timezoneJson = JSONObject(timezoneResponse.body?.string() ?: "")
-                val timezoneId = timezoneJson.getJSONObject("data").getJSONObject("meta").getString("timezone")
-                val tz = TimeZone.getTimeZone(ZoneId.of(timezoneId))
+                val calendar = PrayerCalendarRepository.getOrFetchCurrentMonth(this@ConfigActivity, lat, lon, method)
+                val timezoneId = PrayerCalendarRepository.timezoneId(calendar)
+                val tz = TimeZone.getTimeZone(timezoneId)
                 val now = Calendar.getInstance(tz)
-                val year = now.get(Calendar.YEAR)
-                val month = now.get(Calendar.MONTH) + 1
                 val todayDay = now.get(Calendar.DAY_OF_MONTH)
-
-                val url = "https://api.aladhan.com/v1/calendar/$year/$month?latitude=$lat&longitude=$lon&method=$method"
-                val req = Request.Builder().url(url).build()
-                val res = client.newCall(req).execute()
-                if (!res.isSuccessful) {
-                    throw IOException("Prayer calendar request failed with HTTP ${res.code}")
-                }
-                val jsonStr = res.body?.string() ?: ""
-
-                if (jsonStr.isNotEmpty()) {
-                    val json = JSONObject(jsonStr)
-                    val daysArray = json.getJSONArray("data")
+                val daysArray = calendar.getJSONArray("data")
+                if (daysArray.length() > 0) {
                     val list = mutableListOf<DayPrayerModel>()
 
                     for (i in 0 until daysArray.length()) {
@@ -216,7 +220,10 @@ class ConfigActivity : AppCompatActivity() {
 
                         val dayNum = greg.getString("day").toInt()
                         val weekdayAr = greg.optJSONObject("weekday")?.optString("ar") ?: ""
-                        val gregDateStr = "${greg.getString("day")}/${greg.getJSONObject("month").getString("number")}"
+                        val gregDateStr = "%02d/%02d".format(Locale.ROOT,
+                            greg.getString("day").toInt(),
+                            greg.getJSONObject("month").getInt("number")
+                        )
                         val hijriMonthAr = hijri.optJSONObject("month")?.optString("ar") ?: ""
                         val hijriDateStr = "${hijri.getString("day")} $hijriMonthAr"
 
@@ -240,11 +247,15 @@ class ConfigActivity : AppCompatActivity() {
                     }
 
                     val firstDay = daysArray.optJSONObject(0)?.optJSONObject("date")?.optJSONObject("gregorian")
+                    val firstHijri = daysArray.optJSONObject(0)?.optJSONObject("date")?.optJSONObject("hijri")
                     val monthNameAr = firstDay?.optJSONObject("month")?.optString("ar") ?: ""
                     val yearStr = firstDay?.optString("year") ?: ""
+                    val hijriMonthName = firstHijri?.optJSONObject("month")?.optString("ar") ?: ""
+                    val hijriYear = firstHijri?.optString("year") ?: ""
 
                     withContext(Dispatchers.Main) {
-                        tvMonthTitle.text = "جدول مواقيت الصلاة لشهر $monthNameAr $yearStr"
+                        tvMonthTitle.text =
+                            "جدول مواقيت الصلاة لشهر $monthNameAr $yearStr / $hijriMonthName $hijriYear"
                         tvLoading.visibility = View.GONE
                         renderMonthlyRows(list)
                     }
@@ -266,8 +277,8 @@ class ConfigActivity : AppCompatActivity() {
             val view = inflater.inflate(R.layout.item_day_prayer, llRows, false)
             val rowRoot = view.findViewById<LinearLayout>(R.id.ll_row_root)
 
-            val tvDayName = view.findViewById<TextView>(R.id.tv_day_name)
             val tvDayNum = view.findViewById<TextView>(R.id.tv_day_num)
+            val tvHijriDate = view.findViewById<TextView>(R.id.tv_hijri_date)
             val tvFajr = view.findViewById<TextView>(R.id.tv_fajr)
             val tvSunrise = view.findViewById<TextView>(R.id.tv_sunrise)
             val tvDhuhr = view.findViewById<TextView>(R.id.tv_dhuhr)
@@ -275,8 +286,8 @@ class ConfigActivity : AppCompatActivity() {
             val tvMaghrib = view.findViewById<TextView>(R.id.tv_maghrib)
             val tvIsha = view.findViewById<TextView>(R.id.tv_isha)
 
-            tvDayName.text = item.dayNameAr
             tvDayNum.text = item.gregorianDate
+            tvHijriDate.text = item.hijriDate
             tvFajr.text = item.fajr
             tvSunrise.text = item.sunrise
             tvDhuhr.text = item.dhuhr
@@ -286,7 +297,6 @@ class ConfigActivity : AppCompatActivity() {
 
             if (item.isToday) {
                 rowRoot.setBackgroundColor(getColor(R.color.config_row_highlight))
-                tvDayName.setTextColor(getColor(R.color.config_row_accent))
                 tvDayNum.setTextColor(getColor(R.color.config_row_text))
                 tvFajr.setTextColor(getColor(R.color.config_row_accent))
                 tvSunrise.setTextColor(getColor(R.color.config_row_text))
@@ -295,7 +305,6 @@ class ConfigActivity : AppCompatActivity() {
                 tvMaghrib.setTextColor(getColor(R.color.config_row_accent))
                 tvIsha.setTextColor(getColor(R.color.config_row_accent))
 
-                tvDayName.setTypeface(null, Typeface.BOLD)
                 tvFajr.setTypeface(null, Typeface.BOLD)
                 tvDhuhr.setTypeface(null, Typeface.BOLD)
                 tvAsr.setTypeface(null, Typeface.BOLD)
@@ -315,7 +324,7 @@ class ConfigActivity : AppCompatActivity() {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == 100 && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        if (requestCode == 100 && grantResults.any { it == PackageManager.PERMISSION_GRANTED }) {
             fetchLocation()
         }
     }

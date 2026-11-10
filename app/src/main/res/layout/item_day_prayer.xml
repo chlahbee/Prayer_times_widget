@@ -8,39 +8,37 @@
     android:paddingHorizontal="6dp"
     android:weightSum="7"
     android:gravity="center_vertical"
+    android:showDividers="middle"
+    android:divider="@drawable/table_divider"
     android:background="?android:attr/selectableItemBackground">
 
-    <!-- Day & Date -->
-    <LinearLayout
+    <TextView
+        android:id="@+id/tv_day_num"
         android:layout_width="0dp"
         android:layout_weight="1.1"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center">
-        <TextView
-            android:id="@+id/tv_day_name"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="الخميس"
-            android:textSize="11sp"
-            android:textStyle="bold"
-            android:includeFontPadding="false"
-            android:textColor="@color/config_text_primary"/>
-        <TextView
-            android:id="@+id/tv_day_num"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="01/10"
-            android:textSize="9sp"
-            android:includeFontPadding="false"
-            android:textColor="@color/config_text_secondary"/>
-    </LinearLayout>
+        android:text="01/10"
+        android:textSize="10sp"
+        android:includeFontPadding="false"
+        android:gravity="center"
+        android:textColor="@color/config_text_secondary"/>
+
+    <TextView
+        android:id="@+id/tv_hijri_date"
+        android:layout_width="0dp"
+        android:layout_weight="1.6"
+        android:layout_height="wrap_content"
+        android:text="10 ربيع الآخر"
+        android:textSize="9sp"
+        android:includeFontPadding="false"
+        android:gravity="center"
+        android:textColor="@color/config_text_secondary"/>
 
     <!-- Fajr -->
     <TextView
         android:id="@+id/tv_fajr"
         android:layout_width="0dp"
-        android:layout_weight="0.98"
+        android:layout_weight="0.7"
         android:layout_height="wrap_content"
         android:text="04:51"
         android:textSize="11sp"
@@ -53,7 +51,7 @@
     <TextView
         android:id="@+id/tv_sunrise"
         android:layout_width="0dp"
-        android:layout_weight="0.98"
+        android:layout_weight="0.7"
         android:layout_height="wrap_content"
         android:text="06:19"
         android:textSize="11sp"
@@ -65,7 +63,7 @@
     <TextView
         android:id="@+id/tv_dhuhr"
         android:layout_width="0dp"
-        android:layout_weight="0.98"
+        android:layout_weight="0.7"
         android:layout_height="wrap_content"
         android:text="12:19"
         android:textSize="11sp"
@@ -78,7 +76,7 @@
     <TextView
         android:id="@+id/tv_asr"
         android:layout_width="0dp"
-        android:layout_weight="0.98"
+        android:layout_weight="0.7"
         android:layout_height="wrap_content"
         android:text="15:37"
         android:textSize="11sp"
@@ -91,7 +89,7 @@
     <TextView
         android:id="@+id/tv_maghrib"
         android:layout_width="0dp"
-        android:layout_weight="0.98"
+        android:layout_weight="0.7"
         android:layout_height="wrap_content"
         android:text="18:14"
         android:textSize="11sp"
@@ -104,7 +102,7 @@
     <TextView
         android:id="@+id/tv_isha"
         android:layout_width="0dp"
-        android:layout_weight="0.98"
+        android:layout_weight="0.7"
         android:layout_height="wrap_content"
         android:text="19:27"
         android:textSize="11sp"

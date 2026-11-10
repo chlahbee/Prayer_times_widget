@@ -9,27 +9,19 @@ import android.os.Bundle
 import android.view.View
 import android.widget.RemoteViews
 import kotlinx.coroutines.*
-import okhttp3.OkHttpClient
-import okhttp3.Request
 import org.json.JSONObject
-import java.io.IOException
 import java.util.*
 import java.time.LocalDate
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.concurrent.TimeUnit
 
 class PrayerWidget : AppWidgetProvider() {
 
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
-        if (intent.action == ACTION_TOGGLE_EXPAND) {
+        if (intent.action == ACTION_REFRESH) {
             val widgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
             if (widgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
                 val prefs = context.getSharedPreferences("prayer_prefs", Context.MODE_PRIVATE)
-                val isExpanded = prefs.getBoolean("expanded_$widgetId", true)
-                prefs.edit().putBoolean("expanded_$widgetId", !isExpanded).apply()
-
                 val manager = AppWidgetManager.getInstance(context)
                 val lat = prefs.getFloat("lat", ConfigActivity.DEFAULT_LATITUDE).toDouble()
                 val lon = prefs.getFloat("lon", ConfigActivity.DEFAULT_LONGITUDE).toDouble()
@@ -68,12 +60,7 @@ class PrayerWidget : AppWidgetProvider() {
     }
 
     companion object {
-        const val ACTION_TOGGLE_EXPAND = "com.khemisset.prayerwidget.ACTION_TOGGLE_EXPAND"
-
-        private val client = OkHttpClient.Builder()
-            .connectTimeout(10, TimeUnit.SECONDS)
-            .readTimeout(10, TimeUnit.SECONDS)
-            .build()
+        const val ACTION_REFRESH = "com.khemisset.prayerwidget.ACTION_REFRESH"
 
         fun updateWidget(context: Context, manager: AppWidgetManager, widgetId: Int, lat: Double, lon: Double) {
             CoroutineScope(Dispatchers.IO).launch {
@@ -97,20 +84,19 @@ class PrayerWidget : AppWidgetProvider() {
 
             views.setOnClickPendingIntent(R.id.widget_root, configPending)
 
-            val toggleIntent = Intent(context, PrayerWidget::class.java).apply {
-                action = ACTION_TOGGLE_EXPAND
+            val refreshIntent = Intent(context, PrayerWidget::class.java).apply {
+                action = ACTION_REFRESH
                 putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
             }
-            val togglePending = PendingIntent.getBroadcast(
+            val refreshPending = PendingIntent.getBroadcast(
                 context,
                 widgetId,
-                toggleIntent,
+                refreshIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
-            views.setOnClickPendingIntent(R.id.btn_expand, togglePending)
+            views.setOnClickPendingIntent(R.id.btn_expand, refreshPending)
 
             val prefs = context.getSharedPreferences("prayer_prefs", Context.MODE_PRIVATE)
-            val isExpanded = prefs.getBoolean("expanded_$widgetId", true)
 
             val options = manager.getAppWidgetOptions(widgetId)
             val minWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH)
@@ -118,83 +104,68 @@ class PrayerWidget : AppWidgetProvider() {
 
             val isTall = minHeight >= 110 && minHeight > minWidth
 
-            if (isExpanded) {
-                if (isTall) {
-                    views.setViewVisibility(R.id.ll_all_prayers_horizontal, View.GONE)
-                    views.setViewVisibility(R.id.ll_all_prayers_vertical, View.VISIBLE)
-                } else {
-                    views.setViewVisibility(R.id.ll_all_prayers_vertical, View.GONE)
-                    views.setViewVisibility(R.id.ll_all_prayers_horizontal, View.VISIBLE)
-                }
-                views.setTextViewText(R.id.btn_expand, "▲")
-            } else {
+            if (isTall) {
                 views.setViewVisibility(R.id.ll_all_prayers_horizontal, View.GONE)
+                views.setViewVisibility(R.id.ll_all_prayers_vertical, View.VISIBLE)
+            } else {
                 views.setViewVisibility(R.id.ll_all_prayers_vertical, View.GONE)
-                views.setTextViewText(R.id.btn_expand, "▼")
+                views.setViewVisibility(R.id.ll_all_prayers_horizontal, View.VISIBLE)
             }
+            views.setTextViewText(R.id.btn_expand, "↻")
 
             val cityName = prefs.getString("city_name", null) ?: ConfigActivity.resolveCityName(context, lat, lon)
             views.setTextViewText(R.id.tv_location, cityName)
 
             val method = PrayerCalculation.methodForCoordinates(context, lat, lon)
-            val cacheKey = "${lat.toFloat()}|${lon.toFloat()}|$method"
-            val cachedJsonStr = prefs.getString("cached_timings", null)
-            val cachedDataMatchesLocation = prefs.getString("cached_timings_key", null) == cacheKey
             var cachedTimingsRendered = false
-            if (cachedDataMatchesLocation && !cachedJsonStr.isNullOrEmpty()) {
-                try {
-                    val cachedObj = JSONObject(cachedJsonStr)
-                    val data = cachedObj.getJSONObject("data")
-                    val timezoneId = data.getJSONObject("meta").getString("timezone")
-                    val responseDate = data.getJSONObject("date").getJSONObject("gregorian").getString("date")
-                    val today = LocalDate.now(ZoneId.of(timezoneId))
-                    val cachedDate = LocalDate.parse(responseDate, DateTimeFormatter.ofPattern("dd-MM-yyyy", Locale.ROOT))
-                    if (cachedDate == today) {
-                        renderPrayerTimes(context, views, data.getJSONObject("timings"), timezoneId)
-                        manager.updateAppWidget(widgetId, views)
-                        cachedTimingsRendered = true
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            }
-            if (!cachedTimingsRendered) {
-                manager.updateAppWidget(widgetId, views)
-            }
 
             try {
-                val timestamp = System.currentTimeMillis() / 1000
-                val url = "https://api.aladhan.com/v1/timings/$timestamp?latitude=$lat&longitude=$lon&method=$method"
-                val req = Request.Builder().url(url).build()
-                val res = client.newCall(req).execute()
-                if (!res.isSuccessful) {
-                    throw IOException("Prayer timings request failed with HTTP ${res.code}")
-                }
-                val responseString = res.body?.string() ?: ""
-
-                if (responseString.isNotEmpty()) {
-                    val json = JSONObject(responseString)
-                    val data = json.getJSONObject("data")
-                    val timezoneId = data.getJSONObject("meta").getString("timezone")
-                    val timings = data.getJSONObject("timings")
-
-                    prefs.edit()
-                        .putString("cached_timings", responseString)
-                        .putString("cached_timings_key", cacheKey)
-                        .apply()
-
-                    renderPrayerTimes(context, views, timings, timezoneId)
+                val calendar = PrayerCalendarRepository.getOrFetchCurrentMonth(context, lat, lon, method)
+                val timezoneId = PrayerCalendarRepository.timezoneId(calendar)
+                val today = LocalDate.now(ZoneId.of(timezoneId))
+                val todayData = PrayerCalendarRepository.dayForDate(calendar, today)
+                if (todayData != null) {
+                    renderDates(views, todayData)
+                    renderPrayerTimes(context, views, todayData.getJSONObject("timings"), timezoneId)
                     manager.updateAppWidget(widgetId, views)
+                    cachedTimingsRendered = true
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                if (!cachedTimingsRendered) {
-                    views.setTextViewText(R.id.tv_next_name, "خطأ بالشبكة")
-                    views.setTextViewText(R.id.tv_countdown, "إضغط للتحديث")
-                    manager.updateAppWidget(widgetId, views)
-                }
+            }
+            if (!cachedTimingsRendered) {
+                views.setTextViewText(R.id.tv_next_name, "خطأ بالشبكة")
+                views.setTextViewText(R.id.tv_countdown, "إضغط للتحديث")
+                manager.updateAppWidget(widgetId, views)
             }
         }
+
+        private fun renderDates(views: RemoteViews, dayData: JSONObject) {
+            val date = dayData.getJSONObject("date")
+            val gregorian = date.getJSONObject("gregorian")
+            val hijri = date.getJSONObject("hijri")
+            val hijriMonth = hijri.optJSONObject("month")?.optString("ar").orEmpty()
+            val hijriDate = latinDigits(
+                "${hijri.getString("day")} $hijriMonth ${hijri.getString("year")}"
+            )
+            val gregorianDate = latinDigits("%02d/%02d/%04d".format(
+                Locale.ROOT,
+                gregorian.getString("day").toInt(),
+                gregorian.getJSONObject("month").getInt("number"),
+                gregorian.getString("year").toInt()
+            ))
+            views.setTextViewText(R.id.tv_hijri_date, hijriDate)
+            views.setTextViewText(R.id.tv_gregorian_date, gregorianDate)
+        }
+
+        private fun latinDigits(value: String): String =
+            value.map { character ->
+                when (character) {
+                    in '\u0660'..'\u0669' -> ('0'.code + character.code - '\u0660'.code).toChar()
+                    in '\u06F0'..'\u06F9' -> ('0'.code + character.code - '\u06F0'.code).toChar()
+                    else -> character
+                }
+            }.joinToString("")
 
         private fun renderPrayerTimes(context: Context, views: RemoteViews, timings: JSONObject, timezoneId: String) {
             val prayers = listOf(

@@ -161,74 +161,86 @@
                     android:paddingVertical="10dp"
                     android:paddingHorizontal="6dp"
                     android:background="@color/config_header"
-                    android:weightSum="7">
+                    android:weightSum="7"
+                    android:showDividers="middle"
+                    android:divider="@drawable/table_divider">
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_weight="1.1"
                         android:layout_height="wrap_content"
-                        android:text="اليوم"
-                        android:textSize="11sp"
+                        android:text="ميلادي"
+                        android:textSize="10sp"
                         android:textStyle="bold"
                         android:textColor="#FFFFFF"
                         android:gravity="center"/>
 
                     <TextView
                         android:layout_width="0dp"
-                        android:layout_weight="0.98"
+                        android:layout_weight="1.6"
+                        android:layout_height="wrap_content"
+                        android:text="هجري"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:gravity="center"/>
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_weight="0.7"
                         android:layout_height="wrap_content"
                         android:text="الفجر"
-                        android:textSize="11sp"
+                        android:textSize="10sp"
                         android:textStyle="bold"
                         android:textColor="#FFFFFF"
                         android:gravity="center"/>
 
                     <TextView
                         android:layout_width="0dp"
-                        android:layout_weight="0.98"
+                        android:layout_weight="0.7"
                         android:layout_height="wrap_content"
                         android:text="الشروق"
-                        android:textSize="11sp"
+                        android:textSize="10sp"
                         android:textStyle="bold"
                         android:textColor="#FFFFFF"
                         android:gravity="center"/>
 
                     <TextView
                         android:layout_width="0dp"
-                        android:layout_weight="0.98"
+                        android:layout_weight="0.7"
                         android:layout_height="wrap_content"
                         android:text="الظهر"
-                        android:textSize="11sp"
+                        android:textSize="10sp"
                         android:textStyle="bold"
                         android:textColor="#FFFFFF"
                         android:gravity="center"/>
 
                     <TextView
                         android:layout_width="0dp"
-                        android:layout_weight="0.98"
+                        android:layout_weight="0.7"
                         android:layout_height="wrap_content"
                         android:text="العصر"
-                        android:textSize="11sp"
+                        android:textSize="10sp"
                         android:textStyle="bold"
                         android:textColor="#FFFFFF"
                         android:gravity="center"/>
 
                     <TextView
                         android:layout_width="0dp"
-                        android:layout_weight="0.98"
+                        android:layout_weight="0.7"
                         android:layout_height="wrap_content"
                         android:text="المغرب"
-                        android:textSize="11sp"
+                        android:textSize="10sp"
                         android:textStyle="bold"
                         android:textColor="#FFFFFF"
                         android:gravity="center"/>
 
                     <TextView
                         android:layout_width="0dp"
-                        android:layout_weight="0.98"
+                        android:layout_weight="0.7"
                         android:layout_height="wrap_content"
                         android:text="العشاء"
-                        android:textSize="11sp"
+                        android:textSize="10sp"
                         android:textStyle="bold"
                         android:textColor="#FFFFFF"
                         android:gravity="center"/>
